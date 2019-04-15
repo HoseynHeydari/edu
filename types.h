@@ -25,7 +25,7 @@
  */
 
 #include <stdlib.h>
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 #include <poll.h>
 
 #include "sha1.h"

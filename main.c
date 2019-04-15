@@ -53,7 +53,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <linux/netfilter.h>
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 
 
 int verbosity = 0;

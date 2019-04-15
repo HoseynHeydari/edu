@@ -24,7 +24,7 @@
  *
  */
 
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 #include <ncurses.h>
 #include <stdio.h>
 #include <sys/types.h>

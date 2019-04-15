@@ -25,10 +25,12 @@
  */
 
 #include <curses.h>
-#include <libfindrtp.h>
+#include </home/zahraes/Desktop/2khordad/libfindrtp.h>
 #include <pcap.h>
 #include <stdint.h>
-#include <libipq.h>
+#include <linux/netfilter.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
+#include <linux/netfilter_ipv4/ip_tables.h>
 
 #include "types.h"
 

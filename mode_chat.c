@@ -48,7 +48,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
 
 
