@@ -107,4 +107,3 @@ void examples( char *prog ) {
 	fprintf( stderr, "\n" );
 	exit(-1);
 }
-

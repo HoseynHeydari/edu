@@ -34,7 +34,7 @@
 #include <features.h>
 #include <sys/ioctl.h>
 #include <libgen.h>
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
 #include <net/if.h>
 #include <netdb.h>
