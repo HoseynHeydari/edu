@@ -28,7 +28,9 @@
 #include <libfindrtp.h>
 #include <pcap.h>
 #include <stdint.h>
-#include <libipq.h>
+// #include <linux/netfilter.h>
+// #include <libnetfilter_queue/libnetfilter_queue.h>
+// #include <linux/netfilter_ipv4/ip_tables.h>
 
 #include "types.h"
 
@@ -46,18 +48,18 @@ void version();
 void usage( char *prog );
 void usage_cli();
 void examples( char *prog );
-unsigned char *getmac( char *device );
+// unsigned char *getmac( char *device );
 
-int mode_chat( rtp_pair *rp, unsigned char *hash );
-int mode_recv( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
-int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
+// int mode_chat( rtp_pair *rp, unsigned char *hash );
+// int mode_recv( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
+// int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
 
 int steg_embed( unsigned char *cover, int coverlen, int coverwordsize, unsigned char *message, int messagelen );
 
 int steg_check( unsigned char *stego, int stegolen, int stegowordsize, unsigned char *hash );
 unsigned char *steg_extract( unsigned char *stego, int stegolen, int stegowordsize );
 
-pcap_t *get_pcap( rtp_pair *rp );
+// pcap_t *get_pcap( rtp_pair *rp );
 int get_codec_wordsize( int codec );
 
 uint32_t hashword( const uint32_t *k, size_t length, uint32_t initval);

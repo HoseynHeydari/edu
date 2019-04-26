@@ -24,7 +24,7 @@
  *
  */
 
-#include <libipq.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 
 #include "steganrtp.h"
 
