@@ -29,15 +29,15 @@
 #include "steganrtp.h"
 
 
-void ipq_error() {
+void nfq_error() {
 	extern context ctx;
 	extern int verbosity;
 
 	if(verbosity) ipq_perror("libipq");
-	if(ctx.ipqh) ipq_destroy_handle( ctx.ipqh );
+	if(ctx.qh) ipq_destroy_handle( ctx.qh );
 }
 
-void ipq_fatal() {
-	ipq_error();
+void nfq_fatal() {
+	nfq_error();
 	steganrtp_exit( -1, NULL );
 }

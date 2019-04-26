@@ -68,8 +68,8 @@ uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
 void printbin( int buf, int bits );
 void wprinthex( WINDOW *win, unsigned char *buf, int size );
 
-void ipq_error();
-void ipq_fatal();
+void nfq_error();
+void nfq_fatal();
 
 int iptables_rule( char *table, char *cmd, char *chain, char *devmode, char *device, char *srcaddr, char *dstaddr, char *prot, int srcport, int dstport, char *action );
 int iptables_hook_inbound_rtp( char *device, rtp_pair *rp );

@@ -32,117 +32,117 @@
 
 WINDOW *win_status_in, *win_status_out, *win_chat, *win_shell, *win_command;
 
-// int curses_drawborders() {
-// 	int lines, cols;
-// 	int x;
+int curses_drawborders() {
+	int lines, cols;
+	int x;
 
-// 	getmaxyx( stdscr, lines, cols );
-// 	lines--;
+	getmaxyx( stdscr, lines, cols );
+	lines--;
 
-// 	/* Draw the side borders */
-// 	for( x = 0; x <= lines; x++ ) {
-// 		mvwaddch( stdscr, x, 0, '|' );
-// 		mvwaddch( stdscr, x, cols-1, '|' );
-// 	}
-// 	for( x = 0; x <= 8; x++ ) {
-// 		mvwaddch( stdscr, x, cols/2, '|' );
-// 	}
+	/* Draw the side borders */
+	for( x = 0; x <= lines; x++ ) {
+		mvwaddch( stdscr, x, 0, '|' );
+		mvwaddch( stdscr, x, cols-1, '|' );
+	}
+	for( x = 0; x <= 8; x++ ) {
+		mvwaddch( stdscr, x, cols/2, '|' );
+	}
 
-// 	/* Draw the border for the status windows */
-// 	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, 0, x, '-' );
-// 	mvprintw( 0, 3, "=( Input Status )=" );
-// 	mvprintw( 0, (cols/2)+3, "=( Output Status )=" );
-// 	refresh();
-// //	box( win_status_in, 0, 0 );
-// 	wrefresh( win_status_in );
-// //	box( win_status_out, 0, 0 );
-// 	wrefresh( win_status_out );
+	/* Draw the border for the status windows */
+	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, 0, x, '-' );
+	mvprintw( 0, 3, "=( Input Status )=" );
+	mvprintw( 0, (cols/2)+3, "=( Output Status )=" );
+	refresh();
+//	box( win_status_in, 0, 0 );
+	wrefresh( win_status_in );
+//	box( win_status_out, 0, 0 );
+	wrefresh( win_status_out );
 
-// 	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, 9, x, '-' );
-// 	mvprintw( 9, 3, "=( Chat )=" );
-// 	refresh();
-// //	box( win_chat, 0, 0 );
-// 	wrefresh( win_chat);
+	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, 9, x, '-' );
+	mvprintw( 9, 3, "=( Chat )=" );
+	refresh();
+//	box( win_chat, 0, 0 );
+	wrefresh( win_chat);
 
-// 	/* Draw the border for the command window */
-// 	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, lines-2, x, '-' );
-// 	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, lines, x, '-' );
-// 	mvprintw( lines-2, 3, "=( Command )=" );
-// 	refresh();
-// //	box( win_command, 0, 0 );
-// 	wrefresh( win_command);
+	/* Draw the border for the command window */
+	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, lines-2, x, '-' );
+	for( x = 0; x < cols; x++ ) mvwaddch( stdscr, lines, x, '-' );
+	mvprintw( lines-2, 3, "=( Command )=" );
+	refresh();
+//	box( win_command, 0, 0 );
+	wrefresh( win_command);
 
-// 	return 0;
-// }
+	return 0;
+}
 
-// int curses_init() {
-// 	int lines, cols;
+int curses_init() {
+	int lines, cols;
 
-// 	initscr();
-// //	keypad( stdscr, TRUE );
-// //	nonl();
-// 	cbreak();
-// //	noecho();
+	initscr();
+//	keypad( stdscr, TRUE );
+//	nonl();
+	cbreak();
+//	noecho();
 
-// 	if( has_colors() ) {
-// 		start_color();
-// 		init_pair(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK);
-// 		init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
-// 		init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
-// 		init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
-// 		init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
-// 		init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-// 		init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
-// 		init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-// 	}	
+	if( has_colors() ) {
+		start_color();
+		init_pair(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK);
+		init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
+		init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
+		init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
+		init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+		init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
+		init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
+		init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
+	}	
 
-// 	getmaxyx( stdscr, lines, cols );
-// 	lines--;
+	getmaxyx( stdscr, lines, cols );
+	lines--;
 
-// 	/* Status In window */
-// 	win_status_in = newwin( 8, ((cols-7)/2)+1, 1, 2 );
-// 	wcolor_set( win_status_in, COLOR_RED, NULL );
-// 	scrollok( win_status_in, TRUE );
-// 	idlok( win_status_in, TRUE );
-// 	wrefresh( win_status_in );
+	/* Status In window */
+	win_status_in = newwin( 8, ((cols-7)/2)+1, 1, 2 );
+	wcolor_set( win_status_in, COLOR_RED, NULL );
+	scrollok( win_status_in, TRUE );
+	idlok( win_status_in, TRUE );
+	wrefresh( win_status_in );
 
-// 	/* Status Out window */
-// 	win_status_out = newwin( 8, ((cols-7)/2), 1, (cols/2)+2 );
-// 	wcolor_set( win_status_out, COLOR_RED, NULL );
-// 	scrollok( win_status_out, TRUE );
-// 	idlok( win_status_out, TRUE );
-// 	wrefresh( win_status_out );
+	/* Status Out window */
+	win_status_out = newwin( 8, ((cols-7)/2), 1, (cols/2)+2 );
+	wcolor_set( win_status_out, COLOR_RED, NULL );
+	scrollok( win_status_out, TRUE );
+	idlok( win_status_out, TRUE );
+	wrefresh( win_status_out );
 
-// 	/* Shell window */
-// 	win_shell = newwin( lines-12, cols-4, 10, 2 );
-// 	wcolor_set( win_shell, COLOR_GREEN, NULL );
-// 	scrollok( win_shell, TRUE );
-// 	idlok( win_shell, TRUE );
-// 	wrefresh( win_shell );
+	/* Shell window */
+	win_shell = newwin( lines-12, cols-4, 10, 2 );
+	wcolor_set( win_shell, COLOR_GREEN, NULL );
+	scrollok( win_shell, TRUE );
+	idlok( win_shell, TRUE );
+	wrefresh( win_shell );
 
-// 	/* Chat window */
-// 	win_chat = newwin( lines-12, cols-4, 10, 2 );
-// 	wcolor_set( win_chat, COLOR_GREEN, NULL );
-// 	scrollok( win_chat, TRUE );
-// 	idlok( win_chat, TRUE );
-// 	wrefresh( win_chat );
+	/* Chat window */
+	win_chat = newwin( lines-12, cols-4, 10, 2 );
+	wcolor_set( win_chat, COLOR_GREEN, NULL );
+	scrollok( win_chat, TRUE );
+	idlok( win_chat, TRUE );
+	wrefresh( win_chat );
 
-// 	/* Command window */
-// 	win_command = newwin( 1, cols-4, lines-1, 2 );
-// 	wcolor_set( win_command, COLOR_GREEN, NULL );
-// 	leaveok( win_command, TRUE );
-// 	idlok( win_command, TRUE );
-// 	nodelay( win_command, TRUE );
-// 	keypad( win_command, TRUE );
-// 	wrefresh( win_command );
+	/* Command window */
+	win_command = newwin( 1, cols-4, lines-1, 2 );
+	wcolor_set( win_command, COLOR_GREEN, NULL );
+	leaveok( win_command, TRUE );
+	idlok( win_command, TRUE );
+	nodelay( win_command, TRUE );
+	keypad( win_command, TRUE );
+	wrefresh( win_command );
 
-// 	curses_drawborders();
+	curses_drawborders();
 
-// 	wprintw( win_command, "-> " );
-// 	wrefresh( win_command );
+	wprintw( win_command, "-> " );
+	wrefresh( win_command );
 
-// 	return 0;
-// }
+	return 0;
+}
 
 // char *curses_gets() {
 // 	char *s;

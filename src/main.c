@@ -53,12 +53,21 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <linux/netfilter.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 // #include <libipq.h>
 
 int verbosity = 0;
 unsigned short sequence = 0;
 
 context ctx;
+
+static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
+              struct nfq_data *nfa, void *data)
+{
+        uint32_t id = print_pkt(nfa);
+        printf("entering callback\n");
+        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+}
 
 int main(int argc, char *argv[])
 {
@@ -82,9 +91,9 @@ int main(int argc, char *argv[])
     unsigned int src_addr;
     unsigned int dst_addr;
 
-    // extern WINDOW *win_status_in;
-    // extern WINDOW *win_status_out;
-    // extern WINDOW *win_chat;
+    extern WINDOW *win_status_in;
+    extern WINDOW *win_status_out;
+    extern WINDOW *win_chat;
 
     /* Defaults */
     ctx.mainwin_mode = MODE_CHAT;
@@ -137,120 +146,129 @@ int main(int argc, char *argv[])
         }
     }
 
-//     /* Make sure we have a key */
-//     if( ! key ) {
-//         fprintf( stderr, "Error: Keyphrase (-k) is REQUIRED.\n\n" );
-//         usage( prog );
-//     }
+    /* Make sure we have a key */
+    if( ! key ) {
+        fprintf( stderr, "Error: Keyphrase (-k) is REQUIRED.\n\n" );
+        usage( prog );
+    }
 
-//     /* Make sure we have at least one end of the RTP session */
-//     if( ! src_addr_a && ! dst_addr_a ) {
-//         fprintf( stderr, "Error: At least one end of RTP session (-a or -b) is REQUIRED.\n\n" );
-//         usage( prog );
-//     }
+    /* Make sure we have at least one end of the RTP session */
+    if( ! src_addr_a && ! dst_addr_a ) {
+        fprintf( stderr, "Error: At least one end of RTP session (-a or -b) is REQUIRED.\n\n" );
+        usage( prog );
+    }
     
-//     /* Initialize our ncurses interface */
-//     curses_init();
+    /* Initialize our ncurses interface */
+    curses_init();
 
-//     /* Output Header */
-//     version();
+    /* Output Header */
+    version();
 
-//     /* Signal Handlers - die gracefully */
-//     signal( SIGHUP, steganrtp_sig );
-//     signal( SIGINT, steganrtp_sig );
-//     signal( SIGQUIT, steganrtp_sig );
-//     signal( SIGILL, steganrtp_sig );
-//     signal( SIGABRT, steganrtp_sig );
-//     signal( SIGFPE, steganrtp_sig );
-//     signal( SIGSEGV, steganrtp_sig );
-//     signal( SIGALRM, steganrtp_sig );
-//     signal( SIGTERM, steganrtp_sig );
+    /* Signal Handlers - die gracefully */
+    signal( SIGHUP, steganrtp_sig );
+    signal( SIGINT, steganrtp_sig );
+    signal( SIGQUIT, steganrtp_sig );
+    signal( SIGILL, steganrtp_sig );
+    signal( SIGABRT, steganrtp_sig );
+    signal( SIGFPE, steganrtp_sig );
+    signal( SIGSEGV, steganrtp_sig );
+    signal( SIGALRM, steganrtp_sig );
+    signal( SIGTERM, steganrtp_sig );
 
-//      sha1 hash the key if it exists 
-//     if( key ) {
-//         SHA1Init( &ctx.sha1 );
-//         SHA1Update( &ctx.sha1, key, strlen((char *)key) );
-//         SHA1Final( ctx.sha1hash, &ctx.sha1 );
-//         if(verbosity) {
-//             wprintw( win_status_in, "Using key hash:\n  " );
-//             wrefresh( win_status_in );
-//             for( x = 0; x < sizeof(ctx.sha1hash); x++ ) wprintw( win_status_in, "%02x", ctx.sha1hash[x] );
-//             wprintw( win_status_in, "\n  (%s)\n", key );
-//             wrefresh( win_status_in );
-//         }
-//     }
+    /* sha1 hash the key if it exists */
+    if( key ) {
+        SHA1Init( &ctx.sha1 );
+        SHA1Update( &ctx.sha1, key, strlen((char *)key) );
+        SHA1Final( ctx.sha1hash, &ctx.sha1 );
+        if(verbosity) {
+            wprintw( win_status_in, "Using key hash:\n  " );
+            wrefresh( win_status_in );
+            for( x = 0; x < sizeof(ctx.sha1hash); x++ ) wprintw( win_status_in, "%02x", ctx.sha1hash[x] );
+            wprintw( win_status_in, "\n  (%s)\n", key );
+            wrefresh( win_status_in );
+        }
+    }
 
-//     while(1) {
+    int a = 0;
+    while(a < 5) {
 
-//         /* Initialize context variables for new session */
-// //TODO: move this to a session init function
-//         ctx.seq_in = 1;
-//         ctx.seq_out = 1;
-//         ctx.fd_info = NULL;
-//         ctx.files_in = NULL;
-//         ctx.filesnum = 0;
-//         ctx.files_out_cnt = 0;
-//         ctx.chatbuff = NULL;
-//         ctx.chatbuff = 0;
+    a = a + 1;
+        /* Initialize context variables for new session */
+//TODO: move this to a session init function
+        ctx.seq_in = 1;
+        ctx.seq_out = 1;
+        ctx.fd_info = NULL;
+        ctx.files_in = NULL;
+        ctx.filesnum = 0;
+        ctx.files_out_cnt = 0;
+        ctx.chatbuff = NULL;
+        ctx.chatbuff = 0;
 
-//         /* Sniff for and fill out any unspecified RTP session prarameters */
-//         wprintw( win_chat, "system> Sniffing for RTP session...\n" );
-//         wrefresh( win_chat );
-//         extern unsigned int libfindrtp_debug;
-// //      libfindrtp_debug = verbosity;
-//         libfindrtp_debug = 0;
+        /* Sniff for and fill out any unspecified RTP session prarameters */
+        wprintw( win_chat, "system> Sniffing for RTP session...\n" );
+        wrefresh( win_chat );
+        extern unsigned int libfindrtp_debug;
+//      libfindrtp_debug = verbosity;
+        libfindrtp_debug = 0;
 
-//         while ( !src_addr_a || !src_port || !dst_addr_a || !dst_port ) {
-//             ctx.rp = libfindrtp_find_rtp( ctx.device, 1, src_addr_a, dst_addr_a );
-//             if( ctx.rp ) {
-//                 src_addr = ctx.rp->ip_a_n;
-//                 src_addr_a = (char *)&ctx.rp->ip_a_a;
-//                 memcpy( src_addr_dq , &ctx.rp->ip_a_a, 16);
-//                 src_port = ctx.rp->port_a;
+        while ( !src_addr_a || !src_port || !dst_addr_a || !dst_port ) {
+            ctx.rp = libfindrtp_find_rtp( ctx.device, 1, src_addr_a, dst_addr_a );
+            if( ctx.rp ) {
+                src_addr = ctx.rp->ip_a_n;
+                src_addr_a = (char *)&ctx.rp->ip_a_a;
+                memcpy( src_addr_dq , &ctx.rp->ip_a_a, 16);
+                src_port = ctx.rp->port_a;
     
-//                 dst_addr = ctx.rp->ip_b_n;
-//                 dst_addr_a = (char *)&ctx.rp->ip_b_a;
-//                 memcpy( dst_addr_dq , &ctx.rp->ip_b_a, 16);
-//                 dst_port = ctx.rp->port_b;
-//             } else {
-//                 wprintw( win_status_in, "libfindrtp Error." );
-//                 steganrtp_exit( -1, NULL );
-//             }
-//         }
-//         wprintw( win_chat, "system> Identified RTP session...\n" );
-//         wrefresh( win_chat );
+                dst_addr = ctx.rp->ip_b_n;
+                dst_addr_a = (char *)&ctx.rp->ip_b_a;
+                memcpy( dst_addr_dq , &ctx.rp->ip_b_a, 16);
+                dst_port = ctx.rp->port_b;
+            } else {
+                wprintw( win_status_in, "libfindrtp Error." );
+                steganrtp_exit( -1, NULL );
+            }
+        }
+        wprintw( win_chat, "system> Identified RTP session...\n" );
+        wrefresh( win_chat );
 
-//         /* set up libipq */
-//         int IPQ_COPY_PACKET = 0;        // TODO: @hoseyn remove me.
-//         ctx.ipqh = ipq_create_handle(0, PF_INET);
-//         if( !ctx.ipqh ) ipq_fatal();
-//         if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
+        /* set up libipq */
+        struct nfq_handle *h = nfq_open();
+        if (!h) {
+            fprintf(stderr, "error during nfq_open()\n");
+            exit(1);
+        }
 
-//         /* Add iptables rules */
-//         iptables_hook_inbound_rtp( ctx.device, ctx.rp );
-//         iptables_hook_outbound_rtp( ctx.device, ctx.rp );
+        // ctx.ipqh = ipq_create_handle(0, PF_INET);
+        ctx.qh = nfq_create_queue(h, 0, &cb, NULL);
+        // if( !ctx.ipqh ) nfq_fatal();
+        if ( (nfq_set_mode(ctx.qh, NFQNL_COPY_PACKET, BUFFSIZE)) < 0 ) nfq_fatal();
+        // if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
 
-//         /* Inform the user */
-//         wprintw( win_chat, "system> Hooked RTP session...\n" );
-//         wprintw( win_chat, "system> StegoChatz READY!\n" );
-//         wrefresh( win_chat );
+        /* Add iptables rules */
+        iptables_hook_inbound_rtp( ctx.device, ctx.rp );
+        iptables_hook_outbound_rtp( ctx.device, ctx.rp );
 
-//         wprintw( win_status_in, "\n### New Session ###\n" );
-//         wrefresh( win_status_in );
+        /* Inform the user */
+        wprintw( win_chat, "system> Hooked RTP session...\n" );
+        wprintw( win_chat, "system> StegoChatz READY!\n" );
+        wrefresh( win_chat );
 
-//         wprintw( win_status_out, "\n### New Session ###\n" );
-//         wrefresh( win_status_out );
+        wprintw( win_status_in, "\n### New Session ###\n" );
+        wrefresh( win_status_in );
 
-//         /* Begin Session */
-//         mode_chat( ctx.rp, ctx.sha1hash );
+        wprintw( win_status_out, "\n### New Session ###\n" );
+        wrefresh( win_status_out );
 
-//         /* Clean up from last session */
-//         steganrtp_cleanup();
-//         src_port = 0;
-//         dst_port = 0;
+        /* Begin Session */
+        mode_chat( ctx.rp, ctx.sha1hash );
 
-//     }
+        /* Clean up from last session */
+        steganrtp_cleanup();
+        src_port = 0;
+        dst_port = 0;
 
-//     steganrtp_exit( 0, NULL );
-//     exit(0);
+    }
+
+    steganrtp_exit( 0, NULL );
+    exit(0);
 }
