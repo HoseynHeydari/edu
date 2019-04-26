@@ -65,39 +65,39 @@ void steganrtp_exit( int code, char *reason ) {
 	exit(code);
 }
 
-// void steganrtp_sig( int signal ) {
-// 	extern WINDOW *win_command;
-// 	char reason[25];
+void steganrtp_sig( int signal ) {
+	extern WINDOW *win_command;
+	char reason[25];
 
-// 	if( signal == SIGCHLD ) {
-// 		steganrtp_child_exit( signal );
-// 	} else {
-// 		wprintw( win_command, "Caught signal %d.  Exiting gracefully...\n", signal );
-// 		wrefresh( win_command );
+	if( signal == SIGCHLD ) {
+		steganrtp_child_exit( signal );
+	} else {
+		wprintw( win_command, "Caught signal %d.  Exiting gracefully...\n", signal );
+		wrefresh( win_command );
 
-// 		sprintf( reason, "Caught signal %d.\n", signal );
-// 		steganrtp_exit( signal, reason );
-// 	}
-// }
+		sprintf( reason, "Caught signal %d.\n", signal );
+		steganrtp_exit( signal, reason );
+	}
+}
 
-// void steganrtp_child_exit( int signal ) {
-// 	extern context ctx;
-// 	u_int8_t id;
-// 	pid_t pid;
-// 	int status;
+void steganrtp_child_exit( int signal ) {
+	extern context ctx;
+	u_int8_t id;
+	pid_t pid;
+	int status;
 
-// 	/* check shellpid */
-// 	status = WNOHANG;
-// 	pid = wait(&status);
-// 	if( pid == ctx.shellpid ) {
-// 		/* The shell service has existed */
+	/* check shellpid */
+	status = WNOHANG;
+	pid = wait(&status);
+	if( pid == ctx.shellpid ) {
+		/* The shell service has existed */
 
-// 		/* lookup id from fd */
-// 		id = fileinfo_lookup_id( ctx.fd_info, ctx.shellfds[0] );
+		/* lookup id from fd */
+		id = fileinfo_lookup_id( ctx.fd_info, ctx.shellfds[0] );
 
-// 		/* remove file_info record */
-// 		ctx.fd_info = fileinfo_rem( ctx.fd_info, id );
+		/* remove file_info record */
+		ctx.fd_info = fileinfo_rem( ctx.fd_info, id );
 
-// 		fileinfo_sync_poll_fds();
-// 	}
-// }
+		fileinfo_sync_poll_fds();
+	}
+}
