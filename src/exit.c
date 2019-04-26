@@ -47,8 +47,8 @@ int steganrtp_cleanup() {
 	if( ctx.ipq_hook_out ) iptables_unhook_outbound_rtp( ctx.device, ctx.rp );
 
 	/* Destroy IPQ handle */
-	// if( ctx.ipqh ) ret = ipq_destroy_handle(ctx.ipqh);
-	if( ret == 0 ) ctx.ipqh = NULL;
+	// if( ctx.qh ) ret = ipq_destroy_handle(ctx.qh);
+	if( ret == 0 ) ctx.qh = NULL;
 
 	return(0);
 }

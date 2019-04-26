@@ -11,6 +11,7 @@ set(SOURCES
     src/curses.c
     src/fileinfo.c
     src/sha1.c
+    src/mode_chat.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

@@ -53,12 +53,21 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <linux/netfilter.h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 // #include <libipq.h>
 
 int verbosity = 0;
 unsigned short sequence = 0;
 
 context ctx;
+
+static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
+              struct nfq_data *nfa, void *data)
+{
+        uint32_t id = print_pkt(nfa);
+        printf("entering callback\n");
+        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+}
 
 int main(int argc, char *argv[])
 {
@@ -222,36 +231,44 @@ int main(int argc, char *argv[])
         wprintw( win_chat, "system> Identified RTP session...\n" );
         wrefresh( win_chat );
 
-//         /* set up libipq */
-//         ctx.ipqh = ipq_create_handle(0, PF_INET);
-//         if( !ctx.ipqh ) ipq_fatal();
-//         if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
+        /* set up libipq */
+        struct nfq_handle *h = nfq_open();
+        if (!h) {
+            fprintf(stderr, "error during nfq_open()\n");
+            exit(1);
+        }
 
-//         /* Add iptables rules */
-//         iptables_hook_inbound_rtp( ctx.device, ctx.rp );
-//         iptables_hook_outbound_rtp( ctx.device, ctx.rp );
+        // ctx.ipqh = ipq_create_handle(0, PF_INET);
+        ctx.qh = nfq_create_queue(h, 0, &cb, NULL);
+        // if( !ctx.ipqh ) nfq_fatal();
+        if ( (nfq_set_mode(ctx.qh, NFQNL_COPY_PACKET, BUFFSIZE)) < 0 ) nfq_fatal();
+        // if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
 
-//         /* Inform the user */
-//         wprintw( win_chat, "system> Hooked RTP session...\n" );
-//         wprintw( win_chat, "system> StegoChatz READY!\n" );
-//         wrefresh( win_chat );
+        /* Add iptables rules */
+        iptables_hook_inbound_rtp( ctx.device, ctx.rp );
+        iptables_hook_outbound_rtp( ctx.device, ctx.rp );
 
-//         wprintw( win_status_in, "\n### New Session ###\n" );
-//         wrefresh( win_status_in );
+        /* Inform the user */
+        wprintw( win_chat, "system> Hooked RTP session...\n" );
+        wprintw( win_chat, "system> StegoChatz READY!\n" );
+        wrefresh( win_chat );
 
-//         wprintw( win_status_out, "\n### New Session ###\n" );
-//         wrefresh( win_status_out );
+        wprintw( win_status_in, "\n### New Session ###\n" );
+        wrefresh( win_status_in );
 
-//         /* Begin Session */
-//         mode_chat( ctx.rp, ctx.sha1hash );
+        wprintw( win_status_out, "\n### New Session ###\n" );
+        wrefresh( win_status_out );
 
-//         /* Clean up from last session */
-//         steganrtp_cleanup();
-//         src_port = 0;
-//         dst_port = 0;
+        /* Begin Session */
+        mode_chat( ctx.rp, ctx.sha1hash );
+
+        /* Clean up from last session */
+        steganrtp_cleanup();
+        src_port = 0;
+        dst_port = 0;
 
     }
 
-//     steganrtp_exit( 0, NULL );
-//     exit(0);
+    steganrtp_exit( 0, NULL );
+    exit(0);
 }

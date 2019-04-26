@@ -156,7 +156,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 		}
 	/* Nothing waiting to go out or error, send packet unmodified */
 	ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-	if( ret < 0 ) ipq_error();
+	if( ret < 0 ) nfq_error();
 	return(0);
 	
 	gotfd:
@@ -191,7 +191,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 	/* pass packet and return if codec is unsupported */
 	if( !wordsize ) {
 		ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-		if( ret < 0 ) ipq_error();
+		if( ret < 0 ) nfq_error();
 		return(0);
 	}
 
@@ -231,7 +231,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 		wprintw( win_status_out, "malloc() Error: Memory not allocated\n" );
 		wrefresh( win_status_out );
 		ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-		if( ret < 0 ) ipq_error();
+		if( ret < 0 ) nfq_error();
 		steganrtp_exit( -1, NULL );
 	}
 	memset( buffer, 0, available+1 );
@@ -244,7 +244,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 			wprintw( win_status_out, "malloc() Error: Memory not allocated\n" );
 			wrefresh( win_status_out );
 			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-			if( ret < 0 ) ipq_error();
+			if( ret < 0 ) nfq_error();
 			steganrtp_exit( -1, NULL );
 		}
 		memset( s_hdr, 0, controlsize );
@@ -354,7 +354,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 			wrefresh( win_status_out );
 		}
 		ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-		if( ret < 0 ) ipq_error();
+		if( ret < 0 ) nfq_error();
 		return(0);
 	} else {
 		if(verbosity>=2) {
@@ -486,7 +486,7 @@ int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_m
 		wprinthex( win_status_out, (unsigned char *) rtp_hdr, packetsize );
 	}
 	ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, psize, (unsigned char *)packet );
-	if( ret < 0 ) ipq_fatal();
+	if( ret < 0 ) nfq_fatal();
 
 	/* Cleanup */
 	free(buffer);

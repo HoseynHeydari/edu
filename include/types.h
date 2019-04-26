@@ -61,7 +61,8 @@ typedef struct resend_timer_t {
 /* Structure for the master system context */
 typedef struct context_t {
 	/* libipq stuff for packet hooking */
-	struct ipq_handle *ipqh;
+	// struct ipq_handle *ipqh;
+	struct nfq_q_handle *qh;
 	int ipq_hook_in : 1;
 	int ipq_hook_out : 1;
 
