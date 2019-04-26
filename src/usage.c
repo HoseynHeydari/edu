@@ -38,16 +38,16 @@ extern int verbosity;
 
 
 void version() {
-	extern WINDOW *win_chat;
+	// extern WINDOW *win_chat;
 
-	if( win_chat ) {
-		wprintw( win_chat, "steganRTP %s - Real-time Transfer Protocol covert channel\n", VERSION );
-		wprintw( win_chat, "I)ruid <druid@caughq.org>\n\n" );
-		wrefresh( win_chat );
-	} else {
+	// if( win_chat ) {
+	// 	wprintw( win_chat, "steganRTP %s - Real-time Transfer Protocol covert channel\n", VERSION );
+	// 	wprintw( win_chat, "I)ruid <druid@caughq.org>\n\n" );
+	// 	wrefresh( win_chat );
+	// } else {
 		fprintf( stderr, "steganRTP %s - Real-time Transfer Protocol covert channel\n", VERSION );
 		fprintf( stderr, "I)ruid <druid@caughq.org>\n\n" );
-	}
+	// }
 }
 
 
@@ -72,19 +72,19 @@ void usage( char *prog ) {
 	exit(-1);
 }
 
-void usage_cli() {
-	extern WINDOW *win_chat;
-	wprintw( win_chat, "\n" );
-	wprintw( win_chat, "system> /?                    - Print this Help\n" );
-	wprintw( win_chat, "system> /chat                 - Switch to Chat Mode\n" );
-	wprintw( win_chat, "system> /exit                 - Exit the Program\n" );
-	wprintw( win_chat, "system> /help                 - Print this Help\n" );
-	wprintw( win_chat, "system> /sendfile <filename>  - Send a File\n" );
-	wprintw( win_chat, "system> /shell                - Switch to Shell Mode\n" );
-	wprintw( win_chat, "system> /quit                 - Quit the Program\n" );
-	wprintw( win_chat, "\n" );
-	wrefresh( win_chat );
-}
+// void usage_cli() {
+// 	extern WINDOW *win_chat;
+// 	wprintw( win_chat, "\n" );
+// 	wprintw( win_chat, "system> /?                    - Print this Help\n" );
+// 	wprintw( win_chat, "system> /chat                 - Switch to Chat Mode\n" );
+// 	wprintw( win_chat, "system> /exit                 - Exit the Program\n" );
+// 	wprintw( win_chat, "system> /help                 - Print this Help\n" );
+// 	wprintw( win_chat, "system> /sendfile <filename>  - Send a File\n" );
+// 	wprintw( win_chat, "system> /shell                - Switch to Shell Mode\n" );
+// 	wprintw( win_chat, "system> /quit                 - Quit the Program\n" );
+// 	wprintw( win_chat, "\n" );
+// 	wrefresh( win_chat );
+// }
 
 void examples( char *prog ) {
 	version();

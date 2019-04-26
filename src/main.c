@@ -1,3 +1,35 @@
+/*
+ *  steganRTP: main.c
+ *
+ *    This tool obscures a message, identifies an RTP session with the
+ *    message's desired destination, then embeds it within the RTP audio
+ *    payload.
+ *
+ *    This tool also sniffs network traffic for RTP sessions, attempts
+ *    to identify an embedded message, and then extracts the potential
+ *    message from the RTP audio payload.
+ *
+ *  Copyright (C) 2006  I)ruid
+ *
+ *    This program is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with this program; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ *  Author:
+ *    12/2006 - I)ruid <druid@caughq.org>
+ *
+ */
+
 #include "steganrtp.h"
 #include "static.h"
 
@@ -23,6 +55,11 @@
 #include <linux/netfilter.h>
 // #include <libipq.h>
 
+int verbosity = 0;
+unsigned short sequence = 0;
+
+context ctx;
+
 int main(int argc, char *argv[])
 {
 	int x;
@@ -45,9 +82,9 @@ int main(int argc, char *argv[])
     unsigned int src_addr;
     unsigned int dst_addr;
 
-    extern WINDOW *win_status_in;
-    extern WINDOW *win_status_out;
-    extern WINDOW *win_chat;
+    // extern WINDOW *win_status_in;
+    // extern WINDOW *win_status_out;
+    // extern WINDOW *win_chat;
 
     /* Defaults */
     ctx.mainwin_mode = MODE_CHAT;
@@ -60,45 +97,45 @@ int main(int argc, char *argv[])
     ctx.timeout_steg = 60;
     ctx.shell = FALSE;
 
-//     /* Option Handler */
-//     while( (ch = getopt(argc, argv, "+a:b:c:d:ehi:k:svV")) != EOF ) {
-//         switch( ch ) {
-//             case 'a': /* Host A (close) */
-//                 src_addr_a = optarg;
-//                 break;
-//             case 'b': /* Host B (remote) */
-//                 dst_addr_a = optarg;
-//                 break;
-//             case 'c': /* Host A's port */
-//                 src_port = atol(optarg);
-//                 break;
-//             case 'd': /* Host B's port */
-//                 dst_port = atol(optarg);
-//                 break;
-//             case 'e': /* Print Examples */
-//                 examples( prog );
-//                 break;
-//             case 'i': /* Interface Device */
-//                 ctx.device = optarg;
-//                 break;
-//             case 'k': /* Shared Secret (key) */
-//                 key = (unsigned char *)optarg;
-//                 break;
-//             case 's': /* Enable Shell Service */
-//                 ctx.shell = TRUE;
-//                 break;
-//             case 'v': /* Increase Verbosity */
-//                 verbosity++;
-//                 break;
-//             case 'V': /* Print Version & Exit */
-//                 version(); 
-//                 steganrtp_exit( 0, NULL );
-//                 break;
-//             case 'h': /* Help */
-//             default: /* Invalid Argument */
-//                 usage( prog );
-//         }
-//     }
+    /* Option Handler */
+    while( (ch = getopt(argc, argv, "+a:b:c:d:ehi:k:svV")) != EOF ) {
+        switch( ch ) {
+            case 'a': /* Host A (close) */
+                src_addr_a = optarg;
+                break;
+            case 'b': /* Host B (remote) */
+                dst_addr_a = optarg;
+                break;
+            case 'c': /* Host A's port */
+                src_port = atol(optarg);
+                break;
+            case 'd': /* Host B's port */
+                dst_port = atol(optarg);
+                break;
+            case 'e': /* Print Examples */
+                examples( prog );
+                break;
+            case 'i': /* Interface Device */
+                ctx.device = optarg;
+                break;
+            case 'k': /* Shared Secret (key) */
+                key = (unsigned char *)optarg;
+                break;
+            case 's': /* Enable Shell Service */
+                ctx.shell = TRUE;
+                break;
+            case 'v': /* Increase Verbosity */
+                verbosity++;
+                break;
+            case 'V': /* Print Version & Exit */
+                version(); 
+                steganrtp_exit( 0, NULL );
+                break;
+            case 'h': /* Help */
+            default: /* Invalid Argument */
+                usage( prog );
+        }
+    }
 
 //     /* Make sure we have a key */
 //     if( ! key ) {
@@ -143,76 +180,76 @@ int main(int argc, char *argv[])
 //         }
 //     }
 
-    while(1) {
+//     while(1) {
 
-        /* Initialize context variables for new session */
-//TODO: move this to a session init function
-        ctx.seq_in = 1;
-        ctx.seq_out = 1;
-        ctx.fd_info = NULL;
-        ctx.files_in = NULL;
-        ctx.filesnum = 0;
-        ctx.files_out_cnt = 0;
-        ctx.chatbuff = NULL;
-        ctx.chatbuff = 0;
+//         /* Initialize context variables for new session */
+// //TODO: move this to a session init function
+//         ctx.seq_in = 1;
+//         ctx.seq_out = 1;
+//         ctx.fd_info = NULL;
+//         ctx.files_in = NULL;
+//         ctx.filesnum = 0;
+//         ctx.files_out_cnt = 0;
+//         ctx.chatbuff = NULL;
+//         ctx.chatbuff = 0;
 
-        /* Sniff for and fill out any unspecified RTP session prarameters */
-        wprintw( win_chat, "system> Sniffing for RTP session...\n" );
-        wrefresh( win_chat );
-        extern unsigned int libfindrtp_debug;
-//      libfindrtp_debug = verbosity;
-        libfindrtp_debug = 0;
+//         /* Sniff for and fill out any unspecified RTP session prarameters */
+//         wprintw( win_chat, "system> Sniffing for RTP session...\n" );
+//         wrefresh( win_chat );
+//         extern unsigned int libfindrtp_debug;
+// //      libfindrtp_debug = verbosity;
+//         libfindrtp_debug = 0;
 
-        while ( !src_addr_a || !src_port || !dst_addr_a || !dst_port ) {
-            ctx.rp = libfindrtp_find_rtp( ctx.device, 1, src_addr_a, dst_addr_a );
-            if( ctx.rp ) {
-                src_addr = ctx.rp->ip_a_n;
-                src_addr_a = (char *)&ctx.rp->ip_a_a;
-                memcpy( src_addr_dq , &ctx.rp->ip_a_a, 16);
-                src_port = ctx.rp->port_a;
+//         while ( !src_addr_a || !src_port || !dst_addr_a || !dst_port ) {
+//             ctx.rp = libfindrtp_find_rtp( ctx.device, 1, src_addr_a, dst_addr_a );
+//             if( ctx.rp ) {
+//                 src_addr = ctx.rp->ip_a_n;
+//                 src_addr_a = (char *)&ctx.rp->ip_a_a;
+//                 memcpy( src_addr_dq , &ctx.rp->ip_a_a, 16);
+//                 src_port = ctx.rp->port_a;
     
-                dst_addr = ctx.rp->ip_b_n;
-                dst_addr_a = (char *)&ctx.rp->ip_b_a;
-                memcpy( dst_addr_dq , &ctx.rp->ip_b_a, 16);
-                dst_port = ctx.rp->port_b;
-            } else {
-                wprintw( win_status_in, "libfindrtp Error." );
-                steganrtp_exit( -1, NULL );
-            }
-        }
-        wprintw( win_chat, "system> Identified RTP session...\n" );
-        wrefresh( win_chat );
+//                 dst_addr = ctx.rp->ip_b_n;
+//                 dst_addr_a = (char *)&ctx.rp->ip_b_a;
+//                 memcpy( dst_addr_dq , &ctx.rp->ip_b_a, 16);
+//                 dst_port = ctx.rp->port_b;
+//             } else {
+//                 wprintw( win_status_in, "libfindrtp Error." );
+//                 steganrtp_exit( -1, NULL );
+//             }
+//         }
+//         wprintw( win_chat, "system> Identified RTP session...\n" );
+//         wrefresh( win_chat );
 
-        /* set up libipq */
-        int IPQ_COPY_PACKET = 0;        // TODO: @hoseyn remove me.
-        ctx.ipqh = ipq_create_handle(0, PF_INET);
-        if( !ctx.ipqh ) ipq_fatal();
-        if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
+//         /* set up libipq */
+//         int IPQ_COPY_PACKET = 0;        // TODO: @hoseyn remove me.
+//         ctx.ipqh = ipq_create_handle(0, PF_INET);
+//         if( !ctx.ipqh ) ipq_fatal();
+//         if( (ipq_set_mode(ctx.ipqh, IPQ_COPY_PACKET, BUFFSIZE)) < 0 ) ipq_fatal();
 
-        /* Add iptables rules */
-        iptables_hook_inbound_rtp( ctx.device, ctx.rp );
-        iptables_hook_outbound_rtp( ctx.device, ctx.rp );
+//         /* Add iptables rules */
+//         iptables_hook_inbound_rtp( ctx.device, ctx.rp );
+//         iptables_hook_outbound_rtp( ctx.device, ctx.rp );
 
-        /* Inform the user */
-        wprintw( win_chat, "system> Hooked RTP session...\n" );
-        wprintw( win_chat, "system> StegoChatz READY!\n" );
-        wrefresh( win_chat );
+//         /* Inform the user */
+//         wprintw( win_chat, "system> Hooked RTP session...\n" );
+//         wprintw( win_chat, "system> StegoChatz READY!\n" );
+//         wrefresh( win_chat );
 
-        wprintw( win_status_in, "\n### New Session ###\n" );
-        wrefresh( win_status_in );
+//         wprintw( win_status_in, "\n### New Session ###\n" );
+//         wrefresh( win_status_in );
 
-        wprintw( win_status_out, "\n### New Session ###\n" );
-        wrefresh( win_status_out );
+//         wprintw( win_status_out, "\n### New Session ###\n" );
+//         wrefresh( win_status_out );
 
-        /* Begin Session */
-        mode_chat( ctx.rp, ctx.sha1hash );
+//         /* Begin Session */
+//         mode_chat( ctx.rp, ctx.sha1hash );
 
-        /* Clean up from last session */
-        steganrtp_cleanup();
-        src_port = 0;
-        dst_port = 0;
+//         /* Clean up from last session */
+//         steganrtp_cleanup();
+//         src_port = 0;
+//         dst_port = 0;
 
-    }
+//     }
 
 //     steganrtp_exit( 0, NULL );
 //     exit(0);

@@ -50,9 +50,9 @@ void usage_cli();
 void examples( char *prog );
 // unsigned char *getmac( char *device );
 
-int mode_chat( rtp_pair *rp, unsigned char *hash );
-int mode_recv( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
-int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
+// int mode_chat( rtp_pair *rp, unsigned char *hash );
+// int mode_recv( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
+// int mode_send( rtp_pair *rp, unsigned char *hash, ipq_packet_msg_t *ipq_packet_msg );
 
 int steg_embed( unsigned char *cover, int coverlen, int coverwordsize, unsigned char *message, int messagelen );
 
