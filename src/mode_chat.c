@@ -67,7 +67,8 @@ int mode_chat( rtp_pair *rp, unsigned char *hash ) {
 	size_t psize;
 
 	unsigned char               ipq_buff[BUFFSIZE];
-	// ipq_packet_msg_t            *ipq_packet_msg;
+	ipq_packet_msg_t            *ipq_packet_msg; // FIXME: Remove after nfq_data substituted.
+	struct nfq_data				*nfad;
 
 	struct iphdr                *ip_hdr       = NULL;
 	struct udphdr               *udp_hdr      = NULL;
@@ -157,7 +158,7 @@ int mode_chat( rtp_pair *rp, unsigned char *hash ) {
 	ctx.lastechoreq = time(NULL);
 
 	/* Immediately send an ECHO REQUEST to verify connected session */
-//TODO: replace this with some kind of control message handshake
+	//TODO: replace this with some kind of control message handshake
 	send_control_echorequest();
 
 	/* Main Loop */
@@ -196,7 +197,7 @@ int mode_chat( rtp_pair *rp, unsigned char *hash ) {
 		}
 
 		/* Check for incoming command data from curses */
-//TODO: implement full command-line
+		//TODO: implement full command-line
 		move( lines-2, 5+c_cnt ); /* Position cursor for input */
 		refresh();
 
@@ -256,7 +257,7 @@ int mode_chat( rtp_pair *rp, unsigned char *hash ) {
 					wrefresh( win_command );
 				}
 				break;
-//TODO: Implement handler for arrow keys, make left and right select active window and up and down scroll that window
+			//TODO: Implement handler for arrow keys, make left and right select active window and up and down scroll that window
 			case ERR:
 			default:
 				/* Error or timeout, do nothing */
@@ -268,92 +269,155 @@ int mode_chat( rtp_pair *rp, unsigned char *hash ) {
 			wprintw( win_status_in, "\nChecking for an RTP packet to use...\n" );
 			wrefresh( win_status_in );
 		}
-		switch( (ret = ipq_read( ctx.ipqh, ipq_buff, BUFFSIZE, -1 )) ) {
-			case -1:
+		if( nfq_handle_packet( ctx.ipqh, ipq_buff, BUFFSIZE ) ) {
 				/* Error */
 				wprintw( win_status_in, "\nlibipq ipq_read(): Error: %s\n", ipq_errstr() );
 				wrefresh( win_status_in );
-				break;
-			case 0:
-				/* No packets to read, continue master loop */
-				continue;
-			default:
-				/* There was data to read, continue */
-				break;
+		}
+		// switch( (ret = ipq_read( ctx.ipqh, ipq_buff, BUFFSIZE, -1 )) ) {
+		// 	case -1:
+		// 		/* Error */
+		// 		wprintw( win_status_in, "\nlibipq ipq_read(): Error: %s\n", ipq_errstr() );
+		// 		wrefresh( win_status_in );
+		// 		break;
+		// 	case 0:
+		// 		/* No packets to read, continue master loop */
+		// 		continue;
+		// 	default:
+		// 		/* There was data to read, continue */
+		// 		break;
+		// }
+
+		if(verbosity>=3) {
+			wprintw( win_status_in, "Accepted packet...\n" );
+			wrefresh( win_status_in );
 		}
 
-		switch( ipq_message_type( ipq_buff ) ) {
-			case NLMSG_ERROR:
-				wprintw( win_status_in, "libipq Error: %s\n", strerror(ipq_get_msgerr(ipq_buff)));
-				wrefresh( win_status_in );
-//TODO: change to continue or exit
-				break;
-			case IPQM_PACKET: {
-				if(verbosity>=3) {
-					wprintw( win_status_in, "Accepted packet...\n" );
-					wrefresh( win_status_in );
-				}
+		/* Extract libipq packet structure from libipq message */
+		if( nfq_get_payload() < 0 )
+		ipq_packet_msg = ipq_get_packet( ipq_buff );
+		packet = (const u_char *) ipq_packet_msg->payload;
+		psize = ipq_packet_msg->data_len;
 
-				/* Extract libipq packet structure from libipq message */
-				ipq_packet_msg = ipq_get_packet( ipq_buff );
-				packet = (const u_char *) ipq_packet_msg->payload;
-				psize = ipq_packet_msg->data_len;
+		/* Set up packet header pointers */
+		ip_hdr  = (struct iphdr *)    (packet);
+		udp_hdr = (struct udphdr *)   (packet + (4 * ip_hdr->ihl));
+		rtp_hdr = (rfc1889_rtp_hdr *) (packet + (4 * ip_hdr->ihl) + sizeof(struct udphdr));
 
-				/* Set up packet header pointers */
-				ip_hdr  = (struct iphdr *)    (packet);
-				udp_hdr = (struct udphdr *)   (packet + (4 * ip_hdr->ihl));
-				rtp_hdr = (rfc1889_rtp_hdr *) (packet + (4 * ip_hdr->ihl) + sizeof(struct udphdr));
-
-				/* Check for MARK packets, we don't want to use them */
-				if( rtp_hdr->bMarker ) {
-					ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-					if( ret < 0 ) ipq_fatal();
+		/* Check for MARK packets, we don't want to use them */
+		if( rtp_hdr->bMarker ) {
+			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+			if( ret < 0 ) ipq_fatal();
 					continue;
-				}
+		}
 
-				/* Check packet properties for match to our outbound RTP stream */
-				if( ip_hdr->saddr == ctx.rp->ip_a_n || ip_hdr->daddr == ctx.rp->ip_b_n || udp_hdr->uh_sport == ctx.rp->port_a_n || udp_hdr->uh_dport == ctx.rp->port_b_n ) {
-					if(verbosity>=3) {
-						wprintw( win_status_out, "Packet Broker: Sending outbound packet to send routine...\n" );
+		/* Check packet properties for match to our outbound RTP stream */
+		if( ip_hdr->saddr == ctx.rp->ip_a_n || ip_hdr->daddr == ctx.rp->ip_b_n || udp_hdr->uh_sport == ctx.rp->port_a_n || udp_hdr->uh_dport == ctx.rp->port_b_n ) {
+			if(verbosity>=3) {
+				wprintw( win_status_out, "Packet Broker: Sending outbound packet to send routine...\n" );
 						wrefresh( win_status_out );
-					}
-
-					ctx.lastpktout = time(NULL);
-
-					mode_send( ctx.rp, ctx.sha1hash, ipq_packet_msg );
-				} else
-
-				/* Check packet properties for match to our inbound RTP stream */
-				if( ip_hdr->saddr == ctx.rp->ip_b_n || ip_hdr->daddr == ctx.rp->ip_a_n || udp_hdr->uh_sport ==  ctx.rp->port_b_n || udp_hdr->uh_dport == ctx.rp->port_a_n ) {
-					/* We've got our copy of the packet, let the real one continue */
-					ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-					if( ret < 0 ) ipq_fatal();
-					if(verbosity>=3) {
-      	   		wprintw( win_status_in, "Packet Broker: Sending inbound packet to receive routine...\n" );
-         			wrefresh( win_status_in );
-					}
-
-					ctx.lastpktin = time(NULL);
-
-					mode_recv( ctx.rp, ctx.sha1hash, ipq_packet_msg );
-				} else
-
-				/* The packet didn't match our inbound or our outbound stream */
-				/* This shouldn't happen, send the packet on unmodified */
-				{
-					ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
-					if( ret < 0 ) ipq_fatal();
-					continue;
-				}
-
-				break;
 			}
-      	default:
-      	   wprintw( win_status_in, "libipq error: Unknown message type!\n" );
+
+			ctx.lastpktout = time(NULL);
+
+			mode_send( ctx.rp, ctx.sha1hash, ipq_packet_msg );
+		} else
+
+		/* Check packet properties for match to our inbound RTP stream */
+		if( ip_hdr->saddr == ctx.rp->ip_b_n || ip_hdr->daddr == ctx.rp->ip_a_n || udp_hdr->uh_sport ==  ctx.rp->port_b_n || udp_hdr->uh_dport == ctx.rp->port_a_n ) {
+			/* We've got our copy of the packet, let the real one continue */
+			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+			if( ret < 0 ) ipq_fatal();
+			if(verbosity>=3) {
+      	   wprintw( win_status_in, "Packet Broker: Sending inbound packet to receive routine...\n" );
          	wrefresh( win_status_in );
-         	break;
+			}
+
+			ctx.lastpktin = time(NULL);
+
+			mode_recv( ctx.rp, ctx.sha1hash, ipq_packet_msg );
+		} else
+
+		/* The packet didn't match our inbound or our outbound stream */
+		/* This shouldn't happen, send the packet on unmodified */
+		{
+			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+			if( ret < 0 ) ipq_fatal();
+			continue;
 		}
-	}
+
+		// switch( ipq_message_type( ipq_buff ) ) {
+		// 	// TODO: find 
+		// 	case NLMSG_ERROR:
+		// 		wprintw( win_status_in, "libipq Error: %s\n", strerror(ipq_get_msgerr(ipq_buff)));
+		// 		wrefresh( win_status_in );
+		// 	// TODO: change to continue or exit
+		// 		break;
+		// 	case IPQM_PACKET: {
+		// 		if(verbosity>=3) {
+		// 			wprintw( win_status_in, "Accepted packet...\n" );
+		// 			wrefresh( win_status_in );
+		// 		}
+
+		// 		/* Extract libipq packet structure from libipq message */
+		// 		ipq_packet_msg = ipq_get_packet( ipq_buff );
+		// 		packet = (const u_char *) ipq_packet_msg->payload;
+		// 		psize = ipq_packet_msg->data_len;
+
+		// 		/* Set up packet header pointers */
+		// 		ip_hdr  = (struct iphdr *)    (packet);
+		// 		udp_hdr = (struct udphdr *)   (packet + (4 * ip_hdr->ihl));
+		// 		rtp_hdr = (rfc1889_rtp_hdr *) (packet + (4 * ip_hdr->ihl) + sizeof(struct udphdr));
+
+		// 		/* Check for MARK packets, we don't want to use them */
+		// 		if( rtp_hdr->bMarker ) {
+		// 			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+		// 			if( ret < 0 ) ipq_fatal();
+		// 			continue;
+		// 		}
+
+		// 		/* Check packet properties for match to our outbound RTP stream */
+		// 		if( ip_hdr->saddr == ctx.rp->ip_a_n || ip_hdr->daddr == ctx.rp->ip_b_n || udp_hdr->uh_sport == ctx.rp->port_a_n || udp_hdr->uh_dport == ctx.rp->port_b_n ) {
+		// 			if(verbosity>=3) {
+		// 				wprintw( win_status_out, "Packet Broker: Sending outbound packet to send routine...\n" );
+		// 				wrefresh( win_status_out );
+		// 			}
+
+		// 			ctx.lastpktout = time(NULL);
+
+		// 			mode_send( ctx.rp, ctx.sha1hash, ipq_packet_msg );
+		// 		} else
+
+		// 		/* Check packet properties for match to our inbound RTP stream */
+		// 		if( ip_hdr->saddr == ctx.rp->ip_b_n || ip_hdr->daddr == ctx.rp->ip_a_n || udp_hdr->uh_sport ==  ctx.rp->port_b_n || udp_hdr->uh_dport == ctx.rp->port_a_n ) {
+		// 			/* We've got our copy of the packet, let the real one continue */
+		// 			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+		// 			if( ret < 0 ) ipq_fatal();
+		// 			if(verbosity>=3) {
+  //     	   		wprintw( win_status_in, "Packet Broker: Sending inbound packet to receive routine...\n" );
+  //        			wrefresh( win_status_in );
+		// 			}
+
+		// 			ctx.lastpktin = time(NULL);
+
+		// 			mode_recv( ctx.rp, ctx.sha1hash, ipq_packet_msg );
+		// 		} else
+
+		// 		/* The packet didn't match our inbound or our outbound stream */
+		// 		/* This shouldn't happen, send the packet on unmodified */
+		// 		{
+		// 			ret = ipq_set_verdict( ctx.ipqh, ipq_packet_msg->packet_id, NF_ACCEPT, 0, NULL );
+		// 			if( ret < 0 ) ipq_fatal();
+		// 			continue;
+		// 		}
+
+		// 		break;
+		// 	}
+  //     		default:
+  //     			wprintw( win_status_in, "libipq error: Unknown message type!\n" );
+  //       		wrefresh( win_status_in );
+  //        		break;
+		// }
 
 	return(0);
 }

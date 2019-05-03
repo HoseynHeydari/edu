@@ -189,6 +189,23 @@ typedef struct steg_msg_file_hdr_t {
 	u_int8_t id;
 } steg_msg_file_hdr;
 
+/*  */
+typedef struct ipq_packet_msg {
+    unsigned long packet_id;        /* ID of queued packet */
+    unsigned long mark;             /* Netfilter mark value */
+    long timestamp_sec;             /* Packet arrival time (seconds) */
+    long timestamp_usec;            /* Packet arrvial time (+useconds) */
+    unsigned int hook;              /* Netfilter hook we rode in on */
+    char indev_name[IFNAMSIZ];      /* Name of incoming interface */
+    char outdev_name[IFNAMSIZ];     /* Name of outgoing interface */
+    unsigned short hw_protocol;     /* Hardware protocol (network order) */
+    unsigned short hw_type;         /* Hardware type */
+    unsigned char hw_addrlen;       /* Hardware address length */
+    unsigned char hw_addr[8];       /* Hardware address */
+    size_t data_len;                /* Length of packet data */
+    unsigned char payload[0];       /* Optional packet data */
+} ipq_packet_msg_t;
+
 /* Main window modes */
 #define MODE_CHAT 0
 #define MODE_SHELL 1
